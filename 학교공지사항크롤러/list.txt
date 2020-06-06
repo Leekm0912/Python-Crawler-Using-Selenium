@@ -1,0 +1,2 @@
+학교 공지사항=https://www.yc.ac.kr/kor/250/subview.do
+SW학과 공지사항=https://smartsw.yc.ac.kr/smartsw/1121/subview.do
