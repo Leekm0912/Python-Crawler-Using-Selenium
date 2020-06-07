@@ -11,14 +11,12 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import pyperclip
 import time
+import configparser
+from sys import exit
 
 class NaverWebtoonDownloader:
-    # 웹툰고유번호, 다운로드 시작할 화, 자동멈춤, 셀레니움 사용여부 
-    def __init__(self,title_id,start=1, stop_loop=False,use_selenium=False):
-        self.title_id = title_id
-        self.stop_loop = stop_loop
-        self.use_selenium = use_selenium
-        self.start = start
+    def __init__(self):
+        self.getSetting()
 
         # costomized Header
         self.headers = {'Referer': 'http://comic.naver.com/index.nhn'}
@@ -27,7 +25,7 @@ class NaverWebtoonDownloader:
         # URL for NAVER webtoon
         self.url = 'http://comic.naver.com/webtoon/detail.nhn'
         self.ep_list = []
-        if(use_selenium):
+        if (self.use_selenium):
             self.usingSelenium()
         else:
             self.download()
@@ -38,7 +36,7 @@ class NaverWebtoonDownloader:
         if(self.use_selenium):
             self.soup = BeautifulSoup(html, 'html.parser')
         else:
-            self.params = {'titleId': self.title_id, 'no': no}
+            self.params = {'titleId': self.webtoon_number, 'no': no}
             self.html = requests.get(self.url, params=self.params).text
             self.soup = BeautifulSoup(self.html, 'html.parser')  # requests로 가져온 웹페이지를 파싱함
         wt_title = self.soup.select('.detail h2')[0].text
@@ -108,7 +106,7 @@ class NaverWebtoonDownloader:
         for no in count(self.start): #1부터 무한대로 올라감
             wt_title, ep_title = self.getTitle(no)
             # check if this episode is last or not
-            if(self.stop_loop):
+            if(self.auto_stop):
                 #off_now
                 if ep_title in self.ep_list:
                     break
@@ -120,35 +118,40 @@ class NaverWebtoonDownloader:
 
 
     def usingSelenium(self):
-        chrome_version = "81"
-        id = "아이디"
-        pw = "비밀번호"
-        path = ".\chromedriver_win32_v" + chrome_version + "\chromedriver.exe"
-
+        path = ".\chromedriver_win32_v" + self.chrome_version + "\chromedriver.exe"
         self.driver = webdriver.Chrome(path)
         # 웹페이지 로딩까지 기다릴 시간(초). 너무 빠르면 못찾을때도 있음.
-        self.driver.implicitly_wait(30)
+        self.driver.implicitly_wait(10)
         self.driver.get('https://nid.naver.com/nidlogin.login?mode=form&url=https%3A%2F%2Fwww.naver.com')
 
-        self.copy_input('//*[@id="id"]', id)
+        self.copy_input('//*[@id="id"]', self.id)
         time.sleep(1)
-        self.copy_input('//*[@id="pw"]', pw)
+        self.copy_input('//*[@id="pw"]', self.pw)
         time.sleep(1)
         self.driver.find_element_by_xpath('//*[@id="frmNIDLogin"]/fieldset/input').click()
 
         #target = self.driver.find_element_by_css_selector("#PM_ID_ct > div.header > div.special_bg > div > div.area_logo > h1 > a")
 
-
         for no in count(self.start): #1부터 무한대로 올라감
             # 웹툰 들어가기
-            make_url = urljoin(self.url, "?titleId=" + str(self.title_id) + "&no=" + str(no))
-            print("make_url : "+make_url)
+            make_url = urljoin(self.url, "?titleId=" + str(self.webtoon_number) + "&no=" + str(no))
+            #print("make_url : "+make_url)
 
-            self.driver.get(make_url)
+            # 로딩중에는 페이지가 이동하지 않아서 오류 발생 가능
+            temp1 = make_url.split("//")[1]
+            temp2 = "temp"
+            # 로딩 완료할때까지 get 보내기
+            while(temp1 != temp2):
+                self.driver.get(make_url)
+                temp2 = self.driver.current_url.split("//")[1]
+                # 마지막화가 되면 종료
+                if(temp2.find("titleId") != -1 and temp2.find("no=") == -1):
+                    exit()
+
             html = self.driver.page_source
             wt_title, ep_title = self.getTitle(no,html)
             # check if this episode is last or not
-            if(self.stop_loop):
+            if(self.auto_stop):
                 #off_now
                 if ep_title in self.ep_list:
                     break
@@ -166,6 +169,19 @@ class NaverWebtoonDownloader:
         ActionChains(self.driver).key_down(Keys.CONTROL).send_keys('v').key_up(Keys.CONTROL).perform()
         time.sleep(1)
 
+        
+    def getSetting(self):
+        config = configparser.ConfigParser()
+        config.read('setting.ini',encoding='utf-8')
+        self.webtoon_number = config.getint('DEFAULT', 'webtoon_number')
+        self.start = config.getint('DEFAULT', 'start')
+        self.auto_stop = config.getboolean('DEFAULT', 'auto_stop')
+        self.use_selenium = config.getboolean('DEFAULT', 'use_selenium')
+        if(self.use_selenium):
+            self.chrome_version = config.get("Selenium","chrome_version")
+            self.id = config.get("Selenium","id")
+            self.pw = config.get("Selenium", "pw")
+
+
 if __name__ == '__main__':
-    number = input("웹툰 고유번호 6자리를 입력하세요 : ")
-    downloader = NaverWebtoonDownloader(int(number),start = 1,stop_loop=False,use_selenium=False)
+    downloader = NaverWebtoonDownloader()
