@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from pandas import DataFrame as DF
 from webbrowser import open as open_br
-from time import localtime
+import datetime
 
 STD_INPUT_HANDLE   = -10
 STD_OUTPUT_HANDLE  = -11
@@ -38,8 +38,8 @@ class SchoolCrawler:
         self.notice_url = notice_url
         self.data = []
         self.date = []
-        self.now = localtime()
-        self.day = "%04d.%02d.%02d" % (self.now.tm_year, self.now.tm_mon, self.now.tm_mday)
+        self.now = datetime.datetime.now()
+        self.day = self.now.strftime('%Y.%m.%d')
         # day test
         #self.day = "2020.06.03"
         self.return_code = False
@@ -77,10 +77,10 @@ class SchoolCrawler:
         print("Create by 이경민")
         set_color(FOREGROUND_WHITE)
         if(self.return_code == 2):
-            self.now = localtime()
-            self.day = "%04d.%02d.%02d" % (self.now.tm_year, self.now.tm_mon, self.now.tm_mday)
+            self.now = datetime.datetime().now()
+            self.day = self.now.strftime('%Y.%m.%d')
 
-        print("%04d/%02d/%02d %02d:%02d:%02d 기준" % (self.now.tm_year, self.now.tm_mon, self.now.tm_mday, self.now.tm_hour, self.now.tm_min, self.now.tm_sec))
+        print(self.now.strftime('%Y-%m-%d %H:%M:%S')+" 기준")
         for i in self.data:
             if(no % 10 == 1):
                 set_color(FOREGROUND_WHITE)
