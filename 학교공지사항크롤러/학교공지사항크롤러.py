@@ -9,29 +9,29 @@ from pandas import DataFrame as DF
 from webbrowser import open as open_br
 from datetime import datetime
 
-STD_INPUT_HANDLE   = -10
-STD_OUTPUT_HANDLE  = -11
-STD_ERROR_HANDLE   = -12
-
-FOREGROUND_YELLOW     = 0x06
-FOREGROUND_BLUE      = 0xB1 # text color contains blue.
-FOREGROUND_GREEN     = 0x02 # text color contains green.
-FOREGROUND_RED       = 0x04 # text color contains red.
-FOREGROUND_WHITE       = 0x07 # text color contains red.
-FOREGROUND_INTENSITY = 0x08 # text color is intensified.
-BACKGROUND_BLUE      = 0x10 # background color contains blue.
-BACKGROUND_GREEN     = 0x20 # background color contains green.
-BACKGROUND_RED       = 0x40 # background color contains red.
-BACKGROUND_INTENSITY = 0x80 # background color is intensified.
-
-std_out_handle = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
-
-
-def set_color(color, handle=std_out_handle):
-    bool = windll.kernel32.SetConsoleTextAttribute(handle, color)
-    return bool
 
 class SchoolCrawler:
+    STD_INPUT_HANDLE = -10
+    STD_OUTPUT_HANDLE = -11
+    STD_ERROR_HANDLE = -12
+
+    FOREGROUND_YELLOW = 0x06
+    FOREGROUND_BLUE = 0xB1  # text color contains blue.
+    FOREGROUND_GREEN = 0x02  # text color contains green.
+    FOREGROUND_RED = 0x04  # text color contains red.
+    FOREGROUND_WHITE = 0x07  # text color contains red.
+    FOREGROUND_INTENSITY = 0x08  # text color is intensified.
+    BACKGROUND_BLUE = 0x10  # background color contains blue.
+    BACKGROUND_GREEN = 0x20  # background color contains green.
+    BACKGROUND_RED = 0x40  # background color contains red.
+    BACKGROUND_INTENSITY = 0x80  # background color is intensified.
+
+    std_out_handle = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+
+    def set_color(self,color, handle=std_out_handle):
+        bool = windll.kernel32.SetConsoleTextAttribute(handle, color)
+        return bool
+
     def __init__(self,notice_url,save=False):
         print("로딩중")
         self.save = save
@@ -73,24 +73,24 @@ class SchoolCrawler:
     def getTitle(self):
         no = 1
         title_no = 0
-        set_color(FOREGROUND_GREEN)
+        self.set_color(self.FOREGROUND_GREEN)
         print("Create by 이경민")
-        set_color(FOREGROUND_WHITE)
+        self.set_color(self.FOREGROUND_WHITE)
         if(self.return_code == 2):
-            self.now = datetime().now()
+            self.now = datetime.now()
             self.day = self.now.strftime('%Y.%m.%d')
 
         print(self.now.strftime('%Y-%m-%d %H:%M:%S')+" 기준")
         for i in self.data:
             if(no % 10 == 1):
-                set_color(FOREGROUND_WHITE)
+                self.set_color(self.FOREGROUND_WHITE)
                 print("\n=================="+self.notice_url[title_no][0]+"==================")
                 title_no+=1
             if(self.date[no-1] == self.day):
                 # 오늘 업데이트 된 공지는 노란색으로
-                set_color(FOREGROUND_YELLOW)
+                self.set_color(self.FOREGROUND_YELLOW)
             else:
-                set_color(FOREGROUND_WHITE)
+                self.set_color(self.FOREGROUND_WHITE)
             # 출력되는 리스트
             #if(i[0].find("장학") != -1):
             #    set_color(FOREGROUND_RED)
