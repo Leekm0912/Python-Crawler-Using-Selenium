@@ -27,3 +27,19 @@ CHROME_DRIVER_PATH = ./chromedriver_win32_v87
 # 구글 이미지 클래스명 넣어주기.
 GOOGLE_IMG_CLASSNAME = .rg_i.Q4LuWd
 ```
+
+---
+
+## **3rd party Library**
+
+- urllib
+    
+    ⇒ url 경로 완성과 이미지 다운로드를 위해 사용
+    
+- bs4
+    
+    ⇒ html 요소 파싱을 위해 사용
+    
+- selenium
+    
+    ⇒ 웹 자동화 관련 라이브러리
