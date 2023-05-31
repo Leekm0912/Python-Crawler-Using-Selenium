@@ -9,6 +9,7 @@ from PIL import Image
 from bs4 import BeautifulSoup
 from itertools import count
 from urllib.parse import urljoin
+import urllib3
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -22,6 +23,7 @@ class AlreadyExistFileException(Exception):
 
 class NaverWebtoonDownloader:
     def __init__(self):
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.getSetting()
         self.dir_path = ""
         # costomized Header
@@ -29,7 +31,7 @@ class NaverWebtoonDownloader:
         # background color for png file
         self.WHITE = (255, 255, 255)
         # URL for NAVER webtoon
-        self.url = 'http://comic.naver.com/webtoon/detail.nhn'
+        self.url = 'https://comic.naver.com/webtoon/detail'
         self.ep_list = []
         if self.use_selenium:
             self.usingSelenium()
@@ -42,10 +44,12 @@ class NaverWebtoonDownloader:
             self.soup = BeautifulSoup(html, 'html.parser')
         else:
             self.params = {'titleId': self.webtoon_number, 'no': no}
-            self.html = requests.get(self.url, params=self.params).text
+            self.html = requests.get(self.url, params=self.params, verify=False).text
             self.soup = BeautifulSoup(self.html, 'html.parser')  # requests로 가져온 웹페이지를 파싱함
-        wt_title = self.soup.select('.detail h2')[0].text
-        ep_title = self.soup.select('.tit_area h3')[0].text
+        # print(self.soup)
+        wt_title = self.soup.select('#titleName_toolbar > strong')[0].text
+        # print(wt_title)
+        ep_title = self.soup.select('#subTitle_toolbar')[0].text
         # wt_title = wt_title.split()[0]
         wt_title = re.sub('[/\\:*?"<>|\t\n]', '', wt_title)
         ep_title = re.sub('[\\/:*?"<>|\t\n]', '', ep_title)
@@ -57,6 +61,10 @@ class NaverWebtoonDownloader:
 
         # 리스트 내포. tag속성이 'src'인 친구들 중 wt_viewer클래스의 img 자식 속성 긁어모으기
         img_list = [tag['src'] for tag in self.soup.select('.wt_viewer > img')]
+        for img in img_list:
+            if (img.endswith('gif')):
+                img_list.remove(img)
+                print(f'remove gif : {img}')
         for img in img_list:
 
             # save the images
@@ -76,7 +84,6 @@ class NaverWebtoonDownloader:
             img_data = requests.get(img, headers=self.headers).content
             with open(self.img_path, 'wb') as f:
                 f.write(img_data)
-
         self.im_list = []
         for img_path in img_path_list:
             im = Image.open(img_path)
